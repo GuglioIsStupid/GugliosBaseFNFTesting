@@ -37,13 +37,6 @@ import funkin.util.Constants;
 
 class kastimaginaSong extends Song
 {
-	var comboBreaks:Int = 0;
-	var noteCounter:Int = 0;
-	var score:Int = 0;
-
-	var scoreTXT:FlxText;
-	var scoreTXTTween:FlxTween;
-
     var shinelist:Array<Float> = [
         45082.87292817678,  46408.83977900551,  47734.80662983424,  49060.77348066297,  49723.75690607733, 50386.740331491696, 51712.707182320424,
         53038.67403314915,  54364.64088397788, 55027.624309392246,  55690.60773480661,  57016.57458563534,  58342.54143646407, 59668.508287292796,
@@ -60,6 +53,7 @@ class kastimaginaSong extends Song
     function noteMod_Pos(note:NoteSprite, strum:StrumlineNote, rightSide:Bool) {
         var time = note.get_strumTime();
         // note.mayHit = mustPress
+        if (note.alpha == 0.5 && note.hasBeenHit) note.visible = false;
         if ((time > 2652 && time < 12929) || (time > 156465 && time < 166741)) {
             if (note.mayHit)
                 note.x = pxlist[note.direction];
@@ -214,17 +208,6 @@ class kastimaginaSong extends Song
 	public function listDifficulties(variationId:String, variationIds:Array<String>, showLocked:Bool):Array<String> {
 		return super.listDifficulties(variationId, variationIds);
 	}
-
-	function calcRating() {
-		var ratingPercent = score / ((noteCounter + comboBreaks) * 500);
-		if (ratingPercent == null || ratingPercent < 0) 
-			ratingPercent = 0;
-		else if (ratingPercent > 1)
-			ratingPercent = 1;
-
-
-		scoreTXT.text = "Score: " + score + " | Combo Breaks: " + comboBreaks + " | Accuracy: " + FlxMath.roundDecimal(ratingPercent * 100, 2) + "%";
-	}
 	
 	public override function onCountdownStart(event:CountdownScriptEvent):Void {
 		super.onCountdownStart(event);
@@ -238,24 +221,6 @@ class kastimaginaSong extends Song
 		// Atleast it's easily moddable!
 		OpponentStrumLine.x = 100;
 		PlayerStrumLine.x = 100 + (FlxG.width/2);
-
-		var healthBar = instance.healthBar;
-
-		healthBar.createFilledBar(-65281,-16716033); // Idk this colour format so I stole these values from FlxColor
-
-		// info text
-		instance.scoreText.visible = false;
-		instance.scoreText.active = false;
-
-		scoreTXT = new FlxText(instance.healthBarBG.x, instance.healthBarBG.y + 60, 640, "Score: 0 | Combo Breaks: 0 | Accuracy: 0%", 20);
-		scoreTXT.screenCenter(0x01);
-		scoreTXT.setFormat(Paths.font("vcr.ttf"), 20, 0xFFFFFFFF, "center", FlxTextBorderStyle.OUTLINE, 0xFF000000);
-		scoreTXT.scrollFactor.x = 0;
-		scoreTXT.scrollFactor.y = 0;
-		scoreTXT.zIndex = 855;
-		scoreTXT.cameras = [FlxG.camera];
-		
-		instance.add(scoreTXT);
 	}
 
 	function onNoteHit(event:HitNoteScriptEvent)
@@ -265,16 +230,6 @@ class kastimaginaSong extends Song
 		if (!event.note.noteData.getMustHitNote()) {
 			instance.opponentStrumline.playNoteSplash(event.note.noteData.data % 4); //  woah.... opponent note  splash.... so cools....
 			instance.vocals.set_volume(1.0); // work around for split vocals (v0.3.2 doesn't really support non-split vocals all that well currently...)
-		} else {
-			noteCounter++;
-			// cancel the tween if it's still going
-			if (scoreTXTTween != null) {
-				scoreTXTTween.cancel();
-			}
-			scoreTXT.scale.x = 1.075;
-			scoreTXT.scale.y = 1.075;
-			calcRating();
-			scoreTXTTween = FlxTween.tween(scoreTXT.scale, {x: 1, y: 1}, 0.2, {type: FlxEase.QUADOUT});
 		}
 
 		super.onNoteHit(event);
@@ -317,18 +272,10 @@ class kastimaginaSong extends Song
 	}
 
 	function onNoteMiss(event) {
-		comboBreaks++;
-
-		calcRating();
-
 		super.onNoteMiss(event);
 	}
 
 	function onNoteGhostMiss(event) {
-		comboBreaks++;
-
-		calcRating();
-
 		super.onNoteGhostMiss(event);
 	}
 }

@@ -33,15 +33,6 @@ import funkin.Conductor;
 
 class fuckYouSong extends Song
 {
-	var comboBreaks:Int = 0;
-	var noteCounter:Int = 0;
-	var score:Int = 0;
-
-	var scoreTXT:FlxText;
-	var scoreTXTTween:FlxTween;
-
-	var scoreTXTPos:Array = [0, 0];
-
 	var camHudTweenX:FlxTween;
 	var camHudTweenAngle:FlxTween;
 
@@ -61,17 +52,6 @@ class fuckYouSong extends Song
 		return super.listDifficulties(variationId, variationIds);
 	}
 
-	function calcRating() {
-		var ratingPercent = score / ((noteCounter + comboBreaks) * 500);
-		if (ratingPercent == null || ratingPercent < 0) 
-			ratingPercent = 0;
-		else if (ratingPercent > 1)
-			ratingPercent = 1;
-
-
-		scoreTXT.text = "Score: " + score + " | Combo Breaks: " + comboBreaks + " | Accuracy: " + FlxMath.roundDecimal(ratingPercent * 100, 2) + "%";
-	}
-	
 	public override function onCountdownStart(event:CountdownScriptEvent):Void {
 
 		for (i in 0...8) 
@@ -83,35 +63,6 @@ class fuckYouSong extends Song
 
 		var PlayerStrumLine = instance.playerStrumline;
 		var OpponentStrumLine = instance.opponentStrumline;
-
-		// imo i prefer more centered notefields, but I understand why its not in the base game,,,, distracts the player less
-		// Atleast it's easily moddable!
-		OpponentStrumLine.x = 100;
-		PlayerStrumLine.x = 100 + (FlxG.width/2);
-
-		/* OpponentStrumLine.set_angle(30);
-		PlayerStrumLine.set_angle(-30); */
-
-		var healthBar = instance.healthBar;
-
-		healthBar.createFilledBar(-8355712,-16716033); // Idk this colour format so I stole these values from FlxColor
-
-		// info text
-		instance.scoreText.visible = false;
-		instance.scoreText.active = false;
-
-		scoreTXT = new FlxText(instance.healthBarBG.x, instance.healthBarBG.y + 60, 640, "Score: 0 | Combo Breaks: 0 | Accuracy: 0%", 20);
-		scoreTXT.screenCenter(0x01);
-		scoreTXT.setFormat(Paths.font("vcr.ttf"), 20, 0xFFFFFFFF, "center", FlxTextBorderStyle.OUTLINE, 0xFF000000);
-		scoreTXT.scrollFactor.x = 0;
-		scoreTXT.scrollFactor.y = 0;
-		scoreTXT.zIndex = 855;
-		scoreTXT.cameras = [FlxG.camera];
-
-		scoreTXTPos[0] = scoreTXT.x;
-		scoreTXTPos[1] = scoreTXT.y;
-		
-		instance.add(scoreTXT);
 	}
 
 	function onNoteHit(event:HitNoteScriptEvent)
@@ -121,16 +72,6 @@ class fuckYouSong extends Song
 		if (!event.note.noteData.getMustHitNote()) {
 			instance.opponentStrumline.playNoteSplash(event.note.noteData.data % 4); //  woah.... opponent note  splash.... so cools....
 			instance.vocals.set_volume(1.0); // work around for split vocals (v0.3.2 doesn't really support non-split vocals all that well currently...)
-		} else {
-			noteCounter++;
-			// cancel the tween if it's still going
-			if (scoreTXTTween != null) {
-				scoreTXTTween.cancel();
-			}
-			scoreTXT.scale.x = 1.075;
-			scoreTXT.scale.y = 1.075;
-			calcRating();
-			scoreTXTTween = FlxTween.tween(scoreTXT.scale, {x: 1, y: 1}, 0.2, {type: FlxEase.QUADOUT});
 		}
 
 		super.onNoteHit(event);
@@ -266,33 +207,17 @@ class fuckYouSong extends Song
 
 	function onBeatHit(event:SongTimeScriptEvent):Void {
 		super.onBeatHit(event);
-	
-		
 	}
 
 	function onUpdate(event):Void {
 		var instance = PlayState.instance;
-
-		score = instance.songScore;
-
-		scoreTXT.x = scoreTXTPos[0] + instance.camHUD.x;
-		scoreTXT.y = scoreTXTPos[1] + instance.camHUD.y;
-		scoreTXT.angle = instance.camHUD.angle;
 	}
 
 	function onNoteMiss(event) {
-		comboBreaks++;
-
-		calcRating();
-
 		super.onNoteMiss(event);
 	}
 
 	function onNoteGhostMiss(event) {
-		comboBreaks++;
-
-		calcRating();
-
 		super.onNoteGhostMiss(event);
 	}
 }
