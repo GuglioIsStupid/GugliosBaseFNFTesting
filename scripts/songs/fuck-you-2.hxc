@@ -1,0 +1,200 @@
+import flixel.FlxG;
+import flixel.FlxSprite;
+import flixel.math.FlxBasePoint;
+import flixel.tweens.FlxTween;
+import flixel.tweens.FlxEase;
+import flixel.util.FlxTimer;
+import funkin.Conductor;
+import funkin.graphics.adobeanimate.FlxAtlasSprite;
+import funkin.graphics.FunkinSprite;
+import funkin.modding.base.ScriptedFlxAtlasSprite;
+import funkin.Paths;
+import funkin.audio.FunkinSound;
+import funkin.play.GameOverSubState;
+import funkin.play.PlayState;
+import funkin.play.song.Song;
+import funkin.play.stage.StageProp;
+import funkin.save.Save;
+import funkin.audio.FunkinSound;
+import funkin.play.cutscene.VideoCutscene;
+import funkin.play.cutscene.CutsceneType;
+import funkin.play.PlayStatePlaylist;
+import funkin.play.notes.NoteSplash;
+import flixel.ui.FlxBar;
+import flixel.ui.FlxBarFillDirection;
+import funkin.util.Constants;
+import flixel.text.FlxText;
+import flixel.text.FlxTextBorderStyle;
+import flixel.math.FlxMath;
+// FlxTween
+import flixel.tweens.FlxTween;
+
+import funkin.Conductor;
+
+class fuckYou2Song extends Song
+{
+	var comboBreaks:Int = 0;
+	var noteCounter:Int = 0;
+	var score:Int = 0;
+
+	var scoreTXT:FlxText;
+	var scoreTXTTween:FlxTween;
+
+	var camHudTweenX:FlxTween;
+	var camHudTweenAngle:FlxTween;
+
+	public function new() {
+		super('fuck-you2');
+	}
+
+	public function listDifficulties(variationId:String, variationIds:Array<String>, showLocked:Bool):Array<String> {
+		return super.listDifficulties(variationId, variationIds);
+	}
+
+	function calcRating() {
+		var ratingPercent = score / ((noteCounter + comboBreaks) * 500);
+		if (ratingPercent == null || ratingPercent < 0) 
+			ratingPercent = 0;
+		else if (ratingPercent > 1)
+			ratingPercent = 1;
+
+
+		scoreTXT.text = "Score: " + score + " | Combo Breaks: " + comboBreaks + " | Accuracy: " + FlxMath.roundDecimal(ratingPercent * 100, 2) + "%";
+	}
+	
+	public override function onCountdownStart(event:CountdownScriptEvent):Void {
+		super.onCountdownStart(event);
+
+		var instance = PlayState.instance;
+
+		var PlayerStrumLine = instance.playerStrumline;
+		var OpponentStrumLine = instance.opponentStrumline;
+
+		// imo i prefer more centered notefields, but I understand why its not in the base game,,,, distracts the player less
+		// Atleast it's easily moddable!
+		OpponentStrumLine.x = 100;
+		PlayerStrumLine.x = 100 + (FlxG.width/2);
+
+		var healthBar = instance.healthBar;
+
+		healthBar.createFilledBar(-8355712,-16716033); // Idk this colour format so I stole these values from FlxColor
+
+		// info text
+		instance.scoreText.visible = false;
+		instance.scoreText.active = false;
+
+		scoreTXT = new FlxText(instance.healthBarBG.x, instance.healthBarBG.y + 60, 640, "Score: 0 | Combo Breaks: 0 | Accuracy: 0%", 20);
+		scoreTXT.screenCenter(0x01);
+		scoreTXT.setFormat(Paths.font("vcr.ttf"), 20, 0xFFFFFFFF, "center", FlxTextBorderStyle.OUTLINE, 0xFF000000);
+		scoreTXT.scrollFactor.x = 0;
+		scoreTXT.scrollFactor.y = 0;
+		scoreTXT.zIndex = 855;
+		scoreTXT.cameras = [FlxG.camera];
+		
+		instance.add(scoreTXT);
+	}
+
+	function onNoteHit(event:HitNoteScriptEvent)
+	{
+		var instance = PlayState.instance;
+
+		if (!event.note.noteData.getMustHitNote()) {
+			instance.opponentStrumline.playNoteSplash(event.note.noteData.data % 4); //  woah.... opponent note  splash.... so cools....
+			instance.vocals.set_volume(1.0); // work around for split vocals (v0.3.2 doesn't really support non-split vocals all that well currently...)
+		} else {
+			noteCounter++;
+			// cancel the tween if it's still going
+			if (scoreTXTTween != null) {
+				scoreTXTTween.cancel();
+			}
+			scoreTXT.scale.x = 1.075;
+			scoreTXT.scale.y = 1.075;
+			calcRating();
+			scoreTXTTween = FlxTween.tween(scoreTXT.scale, {x: 1, y: 1}, 0.2, {type: FlxEase.QUADOUT});
+		}
+
+		super.onNoteHit(event);
+	}
+
+	/* function onStepHit(event)
+	{
+		var curStep = Conductor.instance.curStep;
+		var instance = PlayState.instance;
+		var bpm = Conductor.instance.get_bpm();
+		var crochet = ((60 / bpm) * 1000);
+		if (curStep > 4) 
+			if (curStep % 8) {
+				instance.camHUD.x = 60;
+				if (camHudTweenX != null) {
+					camHudTweenX.cancel();
+				}
+				camHudTweenX = FlxTween.tween(instance.camHUD, {x: 0}, crochet/500, {type: FlxEase.backOut});
+			} else if (curStep % 8 == 4) {
+				instance.camHUD.x = -60;
+				if (camHudTweenX != null) {
+					camHudTweenX.cancel();
+				}
+				camHudTweenX = FlxTween.tween(instance.camHUD, {x: 0}, crochet/500, {type: FlxEase.backOut});
+			}
+		super.onStepHit(event);
+	} */
+
+	function onBeatHit(event:SongTimeScriptEvent):Void {
+		super.onBeatHit(event);
+	
+		var instance = PlayState.instance;
+		var bpm = Conductor.instance.get_bpm();
+		var crochet = ((60 / bpm) * 1000);
+		if (event.beat > 0) 
+			if (event.beat % 2) {
+				instance.camHUD.x = 15;
+				if (camHudTweenX != null) {
+					camHudTweenX.cancel();
+				}
+				camHudTweenX = FlxTween.tween(instance.camHUD, {x: 0}, crochet/500, {type: FlxEase.backOut});
+			} else/*  if (event.beat % 2 == 1) */ {
+				instance.camHUD.x = -15;
+				if (camHudTweenX != null) {
+					camHudTweenX.cancel();
+				}
+				camHudTweenX = FlxTween.tween(instance.camHUD, {x: 0}, crochet/500, {type: FlxEase.backOut});
+			}
+
+		if (event.beat >= 36 && event.beat < 129)
+			if (event.beat % 2) {
+				instance.camHUD.angle = 5;
+				if (camHudTweenAngle != null) {
+					camHudTweenAngle.cancel();
+				}
+				camHudTweenAngle = FlxTween.tween(instance.camHUD, {angle: 0}, crochet/500, {type: FlxEase.backOut});
+			} else/*  if (event.beat % 2 == 1) */ {
+				instance.camHUD.angle = -5;
+				if (camHudTweenAngle != null) {
+					camHudTweenAngle.cancel();
+				}
+				camHudTweenAngle = FlxTween.tween(instance.camHUD, {angle: 0}, crochet/500, {type: FlxEase.backOut});
+			}
+	}
+
+	function onUpdate(event):Void {
+		var instance = PlayState.instance;
+
+		score = instance.songScore;
+	}
+
+	function onNoteMiss(event) {
+		comboBreaks++;
+
+		calcRating();
+
+		super.onNoteMiss(event);
+	}
+
+	function onNoteGhostMiss(event) {
+		comboBreaks++;
+
+		calcRating();
+
+		super.onNoteGhostMiss(event);
+	}
+}

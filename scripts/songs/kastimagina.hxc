@@ -1,0 +1,334 @@
+import flixel.FlxG;
+import flixel.FlxSprite;
+import flixel.math.FlxBasePoint;
+import flixel.tweens.FlxTween;
+import flixel.tweens.FlxEase;
+import flixel.util.FlxTimer;
+import funkin.Conductor;
+import funkin.graphics.adobeanimate.FlxAtlasSprite;
+import funkin.graphics.FunkinSprite;
+import funkin.modding.base.ScriptedFlxAtlasSprite;
+import funkin.Paths;
+import funkin.audio.FunkinSound;
+import funkin.play.GameOverSubState;
+import funkin.play.PlayState;
+import funkin.play.song.Song;
+import funkin.play.stage.StageProp;
+import funkin.save.Save;
+import funkin.audio.FunkinSound;
+import funkin.play.cutscene.VideoCutscene;
+import funkin.play.cutscene.CutsceneType;
+import funkin.play.PlayStatePlaylist;
+import funkin.play.notes.NoteSplash;
+import flixel.ui.FlxBar;
+import flixel.ui.FlxBarFillDirection;
+import funkin.util.Constants;
+import flixel.text.FlxText;
+import flixel.text.FlxTextBorderStyle;
+import flixel.math.FlxMath;
+// FlxTween
+import flixel.tweens.FlxTween;
+import funkin.play.notes.NoteSprite;
+import funkin.play.notes.StrumlineNote;
+
+import funkin.Conductor;
+
+import funkin.util.Constants;
+
+class kastimaginaSong extends Song
+{
+	var comboBreaks:Int = 0;
+	var noteCounter:Int = 0;
+	var score:Int = 0;
+
+	var scoreTXT:FlxText;
+	var scoreTXTTween:FlxTween;
+
+    var shinelist:Array<Float> = [
+        45082.87292817678,  46408.83977900551,  47734.80662983424,  49060.77348066297,  49723.75690607733, 50386.740331491696, 51712.707182320424,
+        53038.67403314915,  54364.64088397788, 55027.624309392246,  55690.60773480661,  57016.57458563534,  58342.54143646407, 59668.508287292796,
+        60331.49171270716,  60662.98342541434, 60994.475138121525,  62320.44198895025,  63646.40883977898,  64972.37569060771,  65635.35911602208,
+        65966.85082872926, 135248.61878453035, 136574.58563535908,  137900.5524861878, 139226.51933701654,  139889.5027624309, 140552.48618784526,
+         141878.453038674, 143204.41988950272, 144530.38674033145, 145193.37016574582, 145856.35359116018,  147182.3204419889, 148508.28729281764,
+       149834.25414364637, 150497.23756906073,  151160.2209944751, 152486.18784530382, 153812.15469613255, 155138.12154696128, 155801.10497237564
+    ];
+
+    var xlist = [106, 218, 218, 330];
+	var pxlist = [746, 858, 858, 970];
+    var ylist = [300, 412, 188, 300];
+
+    function noteMod_Pos(note:NoteSprite, strum:StrumlineNote, rightSide:Bool) {
+        var time = note.get_strumTime();
+        // note.mayHit = mustPress
+        if ((time > 2652 && time < 12929) || (time > 156465 && time < 166741)) {
+            if (note.mayHit)
+                note.x = pxlist[note.direction];
+            else
+                note.x = xlist[note.direction];
+            note.y = ylist[note.direction];
+            if (Conductor.instance.songPosition-2000 > time) 
+                note.alpha = 0;
+        } else if (time > 23897 && time < 34393) {
+            if (note.direction % 2 == 0) 
+                note.y = (300 + (Conductor.instance.songPosition - time) * 0.45 * 2);
+            else
+                note.y = (300 - (Conductor.instance.songPosition - time) * 0.45 * 2);
+            
+        } else if (time > 34475 && time < 45000) {
+            if (note.direction % 2 == 1) 
+                note.y = (300 + (Conductor.instance.songPosition - time) * 0.45 * 2);
+            else
+                note.y = (300 - (Conductor.instance.songPosition - time) * 0.45 * 2);
+        } else if (time > 103425 && time < 135166 && Conductor.instance.songPosition < 124640.8839779005) {
+            if (note.direction == 1 && note.direction == 2) 
+                note.y = (300 + (Conductor.instance.songPosition - time) * 0.45 * 2);
+            else
+                note.y = (300 - (Conductor.instance.songPosition - time) * 0.45 * 2);
+        } else if (time  > 13259 && time < 23785) {
+            note.y = (strum.y - (Conductor.instance.songPosition - time) * (0.45 * 2));
+            if (time - Conductor.instance.songPosition < 100)
+                note.alpha = 0;
+            else if (time - Conductor.instance.songPosition < 500)
+                note.alpha = (time - Conductor.instance.songPosition - 100) / 400;
+        } else if ((time > 45082 && time < 66216) || (time > 135248) && time < 156465) {
+            var index = 0;
+            for (i in shinelist) {
+                if (Conductor.instance.songPosition >= i) {
+                    index++;
+                }
+            }
+
+            if (index % 2 == 1)
+                note.y = (50 - (Conductor.instance.songPosition - time) * (0.25 * 2));
+            else
+                note.y = (550 + (Conductor.instance.songPosition - time) * (0.25 * 2));
+        } else if (time > 66298 && time < 82045) {
+            note.y = (50
+                - ((66298.34254143645 + FlxMath.roundDecimal((Conductor.instance.songPosition - 66298.34254143645) / 165.745856354, 0) * 165.745856354)
+                    - time) * (0.3 * 2));
+        } else if (time > 82209 && time < 103338) {
+            if (Std.int((Conductor.instance.songPosition - 82209.94475138119) / (83535.91160220992 - 82209.94475138119)) % 2 == 0) {
+                note.y = -75 + 775 * (((time - 82209.94475138119) % (83535.91160220992 - 82209.94475138119)) / (83535.91160220992 - 82209.94475138119));
+            } else {
+                note.y = 700 - 775 * (((time - 82209.94475138119) % (83535.91160220992 - 82209.94475138119)) / (83535.91160220992 - 82209.94475138119));
+            }
+            
+            if (Std.int((time - 82209.94475138119) / (83535.91160220992 - 82209.94475138119)) == Std.int((Conductor.instance.songPosition - 82209.94475138119) / (83535.91160220992 - 82209.94475138119)))
+                note.alpha = 1;
+            else
+                note.alpha = 0.7;
+        } else if (time > 124640 && time < 135166 && Conductor.instance.songPosition >= 124640.8839779005) {
+            if (rightSide) 
+                note.x = pxlist[note.direction];
+            else
+                note.x = xlist[note.direction];
+
+            note.y = (50 - (Conductor.instance.songPosition - time) * (0.45 * 2));
+        } else if (time >= 167071) {
+            if (rightSide)
+                note.x = 858;
+            else
+                note.x = 218;
+            note.y = (412 - (Conductor.instance.songPosition - time) * (0.45 * 2));
+        } else {
+            note.y = (50 + (Conductor.instance.songPosition - time) * (0.45 * 2));
+        }
+    }
+
+    function strumMod_Pos(strum:StrumlineNote, rightSide:Bool) {
+        if ((Conductor.instance.songPosition >= 2651.9337016574586 && Conductor.instance.songPosition < 13259.668508287292) || (Conductor.instance.songPosition >= 156464.08839779 && Conductor.instance.songPosition < 166740.33149171266)) {
+            if (rightSide) {
+                strum.x = pxlist[strum.direction] - 27;
+                strum.y = ylist[strum.direction] - 27;
+            } else {
+                strum.x = xlist[strum.direction] - 27;
+                strum.y = ylist[strum.direction] - 27;
+            }
+        } else if (Conductor.instance.songPosition >= 13259.668508287292 && Conductor.instance.songPosition < 23784.530386740327) {
+            xlist = [50, 162, 274, 386];
+            pxlist = [690, 802, 914, 1026];
+            ylist = [50, 50, 50, 50];
+            if (rightSide) {
+                strum.x = pxlist[strum.direction] + 27;
+                strum.y = ylist[strum.direction] + 27;
+            } else {
+                strum.x = xlist[strum.direction] + 27;
+                strum.y = ylist[strum.direction] + 27;
+            }
+        } else if ((Conductor.instance.songPosition > 45082 && Conductor.instance.songPosition < 55525)
+        || (Conductor.instance.songPosition > 55690.60773480661 && Conductor.instance.songPosition < 66215.46961325964)
+        || (Conductor.instance.songPosition > 135248 && Conductor.instance.songPosition < 156382)) {
+            var index = 0;
+            for (i in shinelist) {
+                if (Conductor.instance.songPosition >= i) {
+                    index++;
+                }
+            }
+
+            xlist = [50, 162, 274, 386];
+            pxlist = [690, 802, 914, 1026];
+            if (rightSide) {
+                strum.x = pxlist[strum.direction] + 27;
+            } else {
+                strum.x = xlist[strum.direction] + 27;
+            }
+
+            if (index % 2 == 1)
+                strum.y = 50;
+            else
+                strum.y = 550;
+        } else if ((Conductor.instance.songPosition >= 23867.403314917123 && Conductor.instance.songPosition < 44999.999999999985)
+        || (Conductor.instance.songPosition >= 103425.41436464085 && Conductor.instance.songPosition < 124558.01104972372)) {
+            strum.y = 300;
+        } else if (Conductor.instance.songPosition >= 66298.34254143645 && Conductor.instance.songPosition < 71436.46408839777) {
+            xlist = [50, 162, 274, 386];
+            pxlist = [690, 802, 914, 1026];
+            if (rightSide) {
+                strum.x = pxlist[strum.direction] + 27;
+            } else {
+                strum.x = xlist[strum.direction] + 27;
+            }
+            strum.y = 50;
+        } else if (Conductor.instance.songPosition >= 82209.94475138119 && Conductor.instance.songPosition < 103337.0165745856) {
+            if (Std.int((Conductor.instance.songPosition - 82209.94475138119) / (83535.91160220992 - 82209.94475138119)) % 2 == 0) {
+                strum.y = -75 + 775 * (((Conductor.instance.songPosition - 82209.94475138119) % (83535.91160220992 - 82209.94475138119)) / (83535.91160220992 - 82209.94475138119));
+            } else {
+                strum.y = 700 - 775 * (((Conductor.instance.songPosition - 82209.94475138119) % (83535.91160220992 - 82209.94475138119)) / (83535.91160220992 - 82209.94475138119));
+            }
+        }
+        else if (Conductor.instance.songPosition >= 124640.8839779005 && Conductor.instance.songPosition < 135165.74585635355) {
+            if (rightSide) 
+                pxlist[strum.direction] = FlxMath.fastSin((((Conductor.instance.songPosition - 124640.8839779005) / 1325.96685083 + (-0.5 + strum.direction / 3)) * 3.1415926535)) * 168 + 858;
+            else
+                xlist[strum.direction] = FlxMath.fastSin((((Conductor.instance.songPosition - 124640.8839779005) / 1325.96685083 + (-0.5 + strum.direction / 3)) * 3.1415926535)) * 168 + 218;
+            strum.x = xlist[strum.direction];
+
+            strum.y = 50;
+        }
+    }
+
+	public function new() {
+		super('kastimagina');
+	}
+
+	public function listDifficulties(variationId:String, variationIds:Array<String>, showLocked:Bool):Array<String> {
+		return super.listDifficulties(variationId, variationIds);
+	}
+
+	function calcRating() {
+		var ratingPercent = score / ((noteCounter + comboBreaks) * 500);
+		if (ratingPercent == null || ratingPercent < 0) 
+			ratingPercent = 0;
+		else if (ratingPercent > 1)
+			ratingPercent = 1;
+
+
+		scoreTXT.text = "Score: " + score + " | Combo Breaks: " + comboBreaks + " | Accuracy: " + FlxMath.roundDecimal(ratingPercent * 100, 2) + "%";
+	}
+	
+	public override function onCountdownStart(event:CountdownScriptEvent):Void {
+		super.onCountdownStart(event);
+
+		var instance = PlayState.instance;
+
+		var PlayerStrumLine = instance.playerStrumline;
+		var OpponentStrumLine = instance.opponentStrumline;
+
+		// imo i prefer more centered notefields, but I understand why its not in the base game,,,, distracts the player less
+		// Atleast it's easily moddable!
+		OpponentStrumLine.x = 100;
+		PlayerStrumLine.x = 100 + (FlxG.width/2);
+
+		var healthBar = instance.healthBar;
+
+		healthBar.createFilledBar(-65281,-16716033); // Idk this colour format so I stole these values from FlxColor
+
+		// info text
+		instance.scoreText.visible = false;
+		instance.scoreText.active = false;
+
+		scoreTXT = new FlxText(instance.healthBarBG.x, instance.healthBarBG.y + 60, 640, "Score: 0 | Combo Breaks: 0 | Accuracy: 0%", 20);
+		scoreTXT.screenCenter(0x01);
+		scoreTXT.setFormat(Paths.font("vcr.ttf"), 20, 0xFFFFFFFF, "center", FlxTextBorderStyle.OUTLINE, 0xFF000000);
+		scoreTXT.scrollFactor.x = 0;
+		scoreTXT.scrollFactor.y = 0;
+		scoreTXT.zIndex = 855;
+		scoreTXT.cameras = [FlxG.camera];
+		
+		instance.add(scoreTXT);
+	}
+
+	function onNoteHit(event:HitNoteScriptEvent)
+	{
+		var instance = PlayState.instance;
+
+		if (!event.note.noteData.getMustHitNote()) {
+			instance.opponentStrumline.playNoteSplash(event.note.noteData.data % 4); //  woah.... opponent note  splash.... so cools....
+			instance.vocals.set_volume(1.0); // work around for split vocals (v0.3.2 doesn't really support non-split vocals all that well currently...)
+		} else {
+			noteCounter++;
+			// cancel the tween if it's still going
+			if (scoreTXTTween != null) {
+				scoreTXTTween.cancel();
+			}
+			scoreTXT.scale.x = 1.075;
+			scoreTXT.scale.y = 1.075;
+			calcRating();
+			scoreTXTTween = FlxTween.tween(scoreTXT.scale, {x: 1, y: 1}, 0.2, {type: FlxEase.QUADOUT});
+		}
+
+		super.onNoteHit(event);
+	}
+
+	function onBeatHit(event:SongTimeScriptEvent):Void {
+		super.onBeatHit(event);
+	
+		var instance = PlayState.instance;
+		var bpm = Conductor.instance.get_bpm();
+		var crochet = ((60 / bpm) * 1000);
+		var stepCrochet = (crochet / 4);
+	}
+
+	function onUpdate(event):Void {
+		var instance = PlayState.instance;
+        var OpponentStrumLine = instance.opponentStrumline;
+        var PlayerStrumLine = instance.playerStrumline;
+        var StrumLine = instance.strumLine;
+
+		score = instance.songScore;
+
+        instance.health = Constants.HEALTH_MAX/2;
+
+        // for list for all notes in PlayerStrumLine (PlayerStrumLine.notes)
+        for (note in PlayerStrumLine.notes) {
+            var strumNote = PlayerStrumLine.getByDirection(note.direction);
+
+            strumMod_Pos(strumNote, true);
+
+            noteMod_Pos(note, strumNote, true);
+        }
+
+        for (note in OpponentStrumLine.notes) {
+            var strumNote = OpponentStrumLine.getByDirection(note.direction);
+
+            strumMod_Pos(strumNote, false);
+            noteMod_Pos(note, strumNote, false);
+        }
+	}
+
+	function onNoteMiss(event) {
+		comboBreaks++;
+
+		calcRating();
+
+		super.onNoteMiss(event);
+	}
+
+	function onNoteGhostMiss(event) {
+		comboBreaks++;
+
+		calcRating();
+
+		super.onNoteGhostMiss(event);
+	}
+}

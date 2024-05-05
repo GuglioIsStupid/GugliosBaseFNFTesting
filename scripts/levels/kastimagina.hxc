@@ -1,0 +1,18 @@
+import funkin.ui.story.Level;
+import funkin.save.Save;
+
+class KastimaginaLevel extends Level
+{
+	function new()
+	{
+		super('kastimagina');
+	}
+
+  override function isUnlocked():Bool {
+    return true;
+  }
+
+  override function getSongDisplayNames(difficultyId:String):Array<String> {
+    return ["Kastimagina"];
+  }
+}
