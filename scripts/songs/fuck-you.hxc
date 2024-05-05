@@ -31,7 +31,7 @@ import flixel.tweens.FlxTween;
 
 import funkin.Conductor;
 
-class fuckYou2Song extends Song
+class fuckYouSong extends Song
 {
 	var comboBreaks:Int = 0;
 	var noteCounter:Int = 0;
@@ -44,7 +44,7 @@ class fuckYou2Song extends Song
 	var camHudTweenAngle:FlxTween;
 
 	public function new() {
-		super('fuck-you2');
+		super('fuck-you');
 	}
 
 	public function listDifficulties(variationId:String, variationIds:Array<String>, showLocked:Bool):Array<String> {
